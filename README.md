@@ -3,8 +3,8 @@
 
 Источники:
 - [x] technodom
+- [x] mechta
 - [ ] sulpak
-- [ ] mechta
 - [ ] dns-shop
 - [ ] shop
 - [ ] alser
@@ -15,8 +15,8 @@ The script scrapes (parses) the sites and adds information about the product to 
 
 Sources:
 - [x] technodom
+- [x] mechta
 - [ ] sulpak
-- [ ] mechta
 - [ ] dns-shop
 - [ ] shop
 - [ ] alser

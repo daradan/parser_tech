@@ -2,9 +2,9 @@ import requests
 import json
 import logging
 
-from technodom import categories, config, utils
+from mechta import categories, config, utils
 from .schemas import ProductSchema, PriceSchema
-from .crud import TechnodomProductsCrud, TechnodomPricesCrud
+from .crud import MechtaProductsCrud, MechtaPricesCrud
 
 import sys
 import os
@@ -15,63 +15,66 @@ from database import SessionLocal
 import send_to_tg
 
 
-class TechnodomParser:
+class MechtaParser:
     def __init__(self):
         self.session = requests.Session()
         self.db_session = SessionLocal()
-        self.products_crud: TechnodomProductsCrud = TechnodomProductsCrud(session=self.db_session)
-        self.prices_crud: TechnodomPricesCrud = TechnodomPricesCrud(session=self.db_session)
+        self.products_crud: MechtaProductsCrud = MechtaProductsCrud(session=self.db_session)
+        self.prices_crud: MechtaPricesCrud = MechtaPricesCrud(session=self.db_session)
         self.items_count = 0
 
     def start(self):
-        logging.info('Technodom Parser Start')
+        logging.info('Mechta Parser Start')
         try:
-            for catalog in categories.items:
-                url = utils.make_url(catalog)
+            for category in categories.get_categories(self.session):
                 page = 1
-                response = self.get_response(url, page)
-                total_product = response['total']
-                products = response['payload']
-                logging.info(f'Finded {total_product} products in "{catalog}"')
+                response = self.get_response(config.URL, category, page)
+                total_product = response['all_items_count'] - response['page_items_count']
+                products = response['items']
+                logging.info(f'Finded {total_product} products in "{category}"')
                 while total_product > 0:
                     page += 1
-                    products.extend(self.get_response(url, page)['payload'])
-                    total_product -= 24
+                    products.extend(self.get_response(config.URL, category, page)['items'])
+                    total_product -= response['page_items_count']   # 24
                 self.parse_products(products)
         except Exception as e:
             logging.exception(e)
             send_to_tg.send_error(e)
 
-    def get_response(self, url: str, page: int) -> json:
+    def get_response(self, url: str, category: str, page: int) -> json:
         params = config.PARAMS
         params['page'] = page
-        response = self.session.get(url, headers=config.HEADER, params=config.PARAMS)
-        if response.status_code != 200:
-            # response = self.session.get(url, headers=config.HEADER, params=config.PARAMS)
-            self.get_response(url, page)
-        # logging.info(f'{url} - response {response.status_code}')
-        return json.loads(response.text)
+        params['section'] = category
+        products = self.session.get(url, headers=config.HEADER, params=config.PARAMS).json()['data']
+        product_ids = utils.get_product_ids(products['items'])
+
+        data = config.DATA_1 + product_ids + config.DATA_2
+        headers_prices = config.HEADERS_PRICES
+        headers_prices['referer'] = f"{config.URL_REFERER}{category}/"
+        prices = self.session.post(config.URL_PRICES, headers=headers_prices, data=data).json()['data']
+
+        merged_products = utils.merge_price_to_products(products, prices)
+        return merged_products
 
     def parse_products(self, products: list):
         for product in products:
             if not product.get('title') \
-                    or not product.get('uri') \
-                    or not product.get('sku') \
-                    or not product.get('brand') \
-                    or not product.get('categories_ru') \
-                    or not product.get('images'):
+                    or not product.get('code') \
+                    or not product.get('id') \
+                    or not product['metrics'].get('brand') \
+                    or not product['metrics'].get('category') \
+                    or not product.get('photos'):
                 continue
             product_obj = {
                 'name': product['title'],
-                'url': f"https://www.technodom.kz/p/{product['uri']}",
-                'sku': product['sku'],
-                'brand': product['brand'],
-                'category': product['categories_ru'][0],
-                'color': product['color']['title'],
-                'images': utils.make_images(product['images'])
+                'url': f"https://www.mechta.kz/product/{product['code']}",
+                'store_id': product['id'],
+                'brand': product['metrics']['brand'],
+                'category': product['metrics']['category'],
+                'images': ','.join(product['photos']),
             }
             product_obj = ProductSchema(**product_obj)
-            price_obj = PriceSchema(price=int(product['price']))
+            price_obj = PriceSchema(price=product['prices']['discounted_price'])
             self.check_data_from_db(product_obj, price_obj)
 
     def check_data_from_db(self, product_obj: ProductSchema, price_obj: PriceSchema):
@@ -97,8 +100,8 @@ class TechnodomParser:
 
 if __name__ == '__main__':
     logging.basicConfig(
-        handlers=[logging.FileHandler('technodom_parser.log', 'a+', 'utf-8')],
+        handlers=[logging.FileHandler('../mechta_parser.log', 'a+', 'utf-8')],
         format="%(asctime)s %(levelname)s:%(message)s",
         level=logging.INFO,
     )
-    TechnodomParser().start()
+    MechtaParser().start()
