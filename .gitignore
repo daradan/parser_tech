@@ -1,4 +1,4 @@
-technodom/.env
+.env
 /venv
 .idea
 tech.db

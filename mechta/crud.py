@@ -1,7 +1,9 @@
 from typing import Union
 from sqlalchemy.orm import Session
-from .models import TechnodomProducts, TechnodomPrices
+from .models import MechtaProducts, MechtaPrices
+# from .database import SessionLocal
 from .schemas import ProductSchema, PriceSchema
+from . import config
 
 import sys
 import os
@@ -62,13 +64,11 @@ class PricesCrud(Crud):
             limit(global_config.LAST_N_PRICES).all()
 
 
-class TechnodomProductsCrud(ProductsCrud):
+class MechtaProductsCrud(ProductsCrud):
     def __init__(self, session: Session):
-        super().__init__(session, TechnodomProducts)
+        super().__init__(session, MechtaProducts)
 
 
-class TechnodomPricesCrud(PricesCrud):
+class MechtaPricesCrud(PricesCrud):
     def __init__(self, session: Session):
-        super().__init__(session, TechnodomPrices)
-
-
+        super().__init__(session, MechtaPrices)

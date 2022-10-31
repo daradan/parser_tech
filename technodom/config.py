@@ -1,8 +1,6 @@
-last_n_prices = 10
+URL = 'https://api.technodom.kz/katalog/api/v1/products/category/'
 
-url_td = 'https://api.technodom.kz/katalog/api/v1/products/category/'
-
-headers = {
+HEADER = {
     'authority': 'api.technodom.kz',
     'accept': 'application/json, text/plain, */*',
     'accept-language': 'en-US,en;q=0.9',
@@ -21,7 +19,7 @@ headers = {
                   'Chrome/105.0.0.0 Safari/537.36 OPR/91.0.4516.65',
 }
 
-params = {
+PARAMS = {
     'city_id': '5f5f1e3b6a600b98a31fddb6',
     'limit': '24',
     'page': '1',
