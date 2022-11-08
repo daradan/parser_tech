@@ -1,3 +1,4 @@
+MARKET = 'Mechta'
 URL = 'https://www.mechta.kz/api/new/catalog'
 # https://www.mechta.kz/api/new/catalog?section=noutbuki&page=1&properties=&page_limit=24&cache_city=s1
 URL_PRICES = 'https://www.mechta.kz/api/new/mindbox/actions/catalog'

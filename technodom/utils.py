@@ -30,7 +30,7 @@ def make_image_caption(product_obj, last_n_prices):
     fixed_category = fix_category(product_obj.category)
     image_caption = f"<b>{product_obj.name}</b>\n" \
                     f"<b>{product_obj.color}</b>\n" \
-                    f"#Technodom #{fixed_category} #{product_obj.brand}\n\n" \
+                    f"#{config.MARKET} #{fixed_category} #{product_obj.brand}\n\n" \
                     f"{fix_last_n_prices(last_n_prices)}\n" \
                     f"<a href='{product_obj.url}{make_utm_tags()}'>Купить на оф.сайте</a>\n\n" \
                     f"{global_config.TG_CHANNEL}"
