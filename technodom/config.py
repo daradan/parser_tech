@@ -1,3 +1,4 @@
+MARKET = 'Technodom'
 URL = 'https://api.technodom.kz/katalog/api/v1/products/category/'
 
 HEADER = {

@@ -24,7 +24,7 @@ class TechnodomParser:
         self.items_count = 0
 
     def start(self):
-        logging.info('Technodom Parser Start')
+        logging.info(f"{config.MARKET} Parser Start")
         try:
             for catalog in categories.items:
                 url = utils.make_url(catalog)
@@ -39,7 +39,7 @@ class TechnodomParser:
                     total_product -= 24
                 self.parse_products(products)
         except Exception as e:
-            logging.exception(e)
+            logging.exception(f"{config.MARKET}: {e}")
             send_to_tg.send_error(e)
 
     def get_response(self, url: str, page: int) -> json:

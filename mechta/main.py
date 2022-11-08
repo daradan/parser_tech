@@ -24,7 +24,7 @@ class MechtaParser:
         self.items_count = 0
 
     def start(self):
-        logging.info('Mechta Parser Start')
+        logging.info(f"{config.MARKET} Parser Start")
         try:
             for category in categories.get_categories(self.session):
                 page = 1
@@ -38,7 +38,7 @@ class MechtaParser:
                     total_product -= response['page_items_count']   # 24
                 self.parse_products(products)
         except Exception as e:
-            logging.exception(e)
+            logging.exception(f"{config.MARKET}: {e}")
             send_to_tg.send_error(e)
 
     def get_response(self, url: str, category: str, page: int) -> json:
