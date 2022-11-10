@@ -94,7 +94,7 @@ class MechtaParser:
                 if len(product_obj.images.split(',')) > 1:
                     send_tg = send_to_tg.send_as_media_group(image_caption, product_obj)
                 else:
-                    send_tg = send_to_tg.send_as_media_group(image_caption, product_obj.images)
+                    send_tg = send_to_tg.send_as_photo(image_caption, product_obj.images)
                 logging.info(f"Send to telegram status code: {send_tg}")
 
 
