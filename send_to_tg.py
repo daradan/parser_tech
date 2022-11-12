@@ -20,7 +20,7 @@ def send_error(message):
 
 
 def send_as_photo(image_caption, image):
-    url = f'https://api.telegram.org/bot{global_config.TG_TOKEN}sendPhoto'
+    url = f'https://api.telegram.org/bot{global_config.TG_TOKEN}/sendPhoto'
     params = {
         'chat_id': global_config.TG_CHANNEL,
         'caption': image_caption,

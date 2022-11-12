@@ -2,6 +2,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 import technodom
 import mechta
+import sulpak
 
 if __name__ == '__main__':
     logging.basicConfig(
@@ -12,3 +13,4 @@ if __name__ == '__main__':
 
     technodom.TechnodomParser().start()
     mechta.MechtaParser().start()
+    sulpak.SulpakParser().start()

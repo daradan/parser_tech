@@ -6,29 +6,17 @@ parent = os.path.dirname(current)
 sys.path.append(parent)
 import global_config
 
-# from dotenv import load_dotenv, find_dotenv
-#
-# load_dotenv(find_dotenv())
+
+def make_image_url(images: list) -> str:
+    for index, image in enumerate(images):
+        images[index] = f"{config.URL_IMAGE}{image}"
+    return ','.join(images)
 
 
-def make_url(catalog: str) -> str:
-    url = f"{config.URL}{catalog}"
-    return url
-
-
-def get_product_ids(products_items: list) -> str:
-    product_ids = []
-    for product in products_items:
-        product_ids.append(str(product['id']))
-    return ','.join(product_ids)
-
-
-def merge_price_to_products(products: dict, prices: dict) -> dict:
-    for key, value in prices.items():
-        for num, prdct_value in enumerate(products['items']):
-            if value['id'] == prdct_value['id']:
-                products['items'][num].update(value)
-    return products
+def make_characteristics(characteristics: list) -> str:
+    for index, item in enumerate(characteristics):
+        characteristics[index] = f"{item['title']}: {item['value']['value']}"
+    return '\n'.join(characteristics)
 
 
 def get_percentage(price, price_old):
@@ -42,6 +30,7 @@ def make_image_caption(product_obj, last_n_prices):
     fixed_category = fix_category(product_obj.category)
     image_caption = f"<b>{product_obj.name}</b>\n" \
                     f"#{config.MARKET} #{fixed_category} #{fix_category(product_obj.brand)}\n\n" \
+                    f"{product_obj.characteristics}\n\n" \
                     f"{fix_last_n_prices(last_n_prices)}\n" \
                     f"<a href='{product_obj.url}{make_utm_tags()}'>Купить на оф.сайте</a>\n\n" \
                     f"{global_config.TG_CHANNEL}"
