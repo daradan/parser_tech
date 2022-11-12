@@ -5,7 +5,7 @@ URL_IMAGE = 'https://object.pscloud.io/cms/cms/Photo/'
 
 HEADER = {
     'Accept-Charset': 'UTF-8',
-    'Authorization': 'XXX',
+    'Authorization': 'XXXXX',
     'NetworkConsumer': 'mobile-app',
     'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 12; 21081111RG Build/SP1A.210812.016)',
     'Host': 'api.sulpak.kz',
