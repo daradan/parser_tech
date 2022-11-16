@@ -1,10 +1,19 @@
 from . import config
+import requests
 import sys
 import os
+from dotenv import load_dotenv, find_dotenv
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 import global_config
+
+load_dotenv(find_dotenv())
+
+
+def get_bearer_token():
+    response = requests.post('https://api.sulpak.kz/authentication/token', headers=config.HEADER_BEARER, json={})
+    return response.text
 
 
 def make_image_url(images: list) -> str:
