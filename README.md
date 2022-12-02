@@ -8,9 +8,9 @@
 - [x] technodom
 - [x] mechta
 - [x] sulpak
+- [x] alser
 - [ ] dns-shop
 - [ ] shop
-- [ ] alser
 
 ### Установка и настройка
 Клонируем репозитории
@@ -40,9 +40,9 @@ Sources:
 - [x] technodom
 - [x] mechta
 - [x] sulpak
+- [x] alser
 - [ ] dns-shop
 - [ ] shop
-- [ ] alser
 
 ### Installation and setup
 Clone repositories
