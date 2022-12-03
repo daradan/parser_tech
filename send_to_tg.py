@@ -15,7 +15,23 @@ def send_error(message):
     r = requests.post(url, data=params)
     if r.status_code != 200:
         data = r.json()
-        logging.info(f"TG ERROR:{data}")
+        logging.info(f"TG ERROR: {data}")
+        time_to_sleep = data['parameters']['retry_after']
+        time.sleep(time_to_sleep)
+        send_error(message)
+
+
+def send_msg(message):
+    url = f'https://api.telegram.org/bot{global_config.TG_TOKEN}/sendMessage'
+    params = {
+        'chat_id': global_config.TG_CHANNEL,
+        'text': message,
+        'parse_mode': 'HTML'
+    }
+    r = requests.post(url, data=params)
+    if r.status_code != 200:
+        data = r.json()
+        logging.info(f"TG MSG: {data}")
         time_to_sleep = data['parameters']['retry_after']
         time.sleep(time_to_sleep)
         send_error(message)
@@ -32,7 +48,10 @@ def send_as_photo(image_caption, image):
     r = requests.post(url, data=params)
     if r.status_code != 200:
         data = r.json()
-        logging.info(f"TG ERROR:{data}")
+        logging.info(f"TG PHOTO: {data}")
+        if data['error_code'] == 400:
+            send_msg(image_caption)
+            return
         time_to_sleep = data['parameters']['retry_after']
         time.sleep(time_to_sleep)
         send_as_photo(image_caption, image)
@@ -53,7 +72,10 @@ def send_as_media_group(image_caption, product):
     r = requests.post(url, data=params)
     if r.status_code != 200:
         data = r.json()
-        logging.info(f"TG ERROR:{data}")
+        logging.info(f"TG MEDIA_G: {data}")
+        if data['error_code'] == 400:
+            send_msg(image_caption)
+            return
         time_to_sleep = data['parameters']['retry_after']
         time.sleep(time_to_sleep)
         send_as_media_group(image_caption, product)
