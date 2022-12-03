@@ -2,4 +2,4 @@
 /venv
 .idea
 tech.db
-*.log
+*.log*
