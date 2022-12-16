@@ -19,6 +19,7 @@ def send_error(message):
         time_to_sleep = data['parameters']['retry_after']
         time.sleep(time_to_sleep)
         send_error(message)
+        return r.status_code
 
 
 def send_msg(message):
@@ -35,6 +36,7 @@ def send_msg(message):
         time_to_sleep = data['parameters']['retry_after']
         time.sleep(time_to_sleep)
         send_error(message)
+        return r.status_code
 
 
 def send_as_photo(image_caption, image):
@@ -51,10 +53,11 @@ def send_as_photo(image_caption, image):
         logging.info(f"TG PHOTO: {data}")
         if data['error_code'] == 400:
             send_msg(image_caption)
-            return
+            return r.status_code
         time_to_sleep = data['parameters']['retry_after']
         time.sleep(time_to_sleep)
         send_as_photo(image_caption, image)
+        return r.status_code
 
 
 def send_as_media_group(image_caption, product):
@@ -75,7 +78,8 @@ def send_as_media_group(image_caption, product):
         logging.info(f"TG MEDIA_G: {data}")
         if data['error_code'] == 400:
             send_msg(image_caption)
-            return
+            return r.status_code
         time_to_sleep = data['parameters']['retry_after']
         time.sleep(time_to_sleep)
         send_as_media_group(image_caption, product)
+        return r.status_code
