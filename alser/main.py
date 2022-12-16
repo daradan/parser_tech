@@ -24,8 +24,8 @@ class AlserParser:
 
     def start(self):
         logging.info(f"{config.MARKET} Parser Start")
-        try:
-            for category_id, category in categories.get_categories().items():
+        for category_id, category in categories.get_categories().items():
+            try:
                 page = 1
                 response = self.get_response(int(category_id), page)
                 total_product = response['_meta']['totalCount']
@@ -35,9 +35,10 @@ class AlserParser:
                     page += 1
                     products.extend(self.get_response(category_id, page)['data'])
                 self.parse_products(products, category)
-        except Exception as e:
-            logging.exception(f"{config.MARKET}: {e}")
-            send_to_tg.send_error(e)
+            except Exception as e:
+                logging.exception(f"{config.MARKET} {category}: {e}")
+                send_to_tg.send_error(f"{config.MARKET} {category}: {e}")
+                continue
 
     def get_response(self, category_id: int, page: int) -> json:
         json_data = config.JSON_DATA
@@ -50,30 +51,35 @@ class AlserParser:
 
     def parse_products(self, products: list, category: str):
         for product in products:
-            if not product.get('id') \
-                    or not product.get('title') \
-                    or not product.get('keyword') \
-                    or not product.get('image') \
-                    or not product.get('price') \
-                    or not product.get('specs'):
+            try:
+                if not product.get('id') \
+                        or not product.get('title') \
+                        or not product.get('keyword') \
+                        or not product.get('image') \
+                        or not product.get('price') \
+                        or not product.get('specs'):
+                    continue
+                if not product.get('specs') or len(product['specs']) <= 2 or not product['specs'][1].get('option_name'):
+                    brand = ''
+                else:
+                    brand = product['specs'][1]['option_name']
+                product_obj = {
+                    'name': product['title'],
+                    'url': f"{config.URL_P}/{product['keyword']}",
+                    'store_id': product['id'],
+                    'brand': brand,
+                    'category': category,
+                    'characteristics': utils.get_specs(product['specs']),
+                    'images': utils.check_img(product['image']),
+                }
+                logging.info(f"product_obj: {product_obj}")
+                product_obj = ProductSchema(**product_obj)
+                price_obj = PriceSchema(price=int(product['price']))
+                self.check_data_from_db(product_obj, price_obj)
+            except Exception as e:
+                logging.exception(f"{config.MARKET} {product}: {e}")
+                send_to_tg.send_error(f"{config.MARKET}: {e}")
                 continue
-            if not product.get('specs') or len(product['specs']) <= 2 or not product['specs'][1].get('option_name'):
-                brand = ''
-            else:
-                brand = product['specs'][1]['option_name']
-            product_obj = {
-                'name': product['title'],
-                'url': f"{config.URL_P}/{product['keyword']}",
-                'store_id': product['id'],
-                'brand': brand,
-                'category': category,
-                'characteristics': utils.get_specs(product['specs']),
-                'images': utils.check_img(product['image']),
-            }
-            logging.info(f"product_obj: {product_obj}")
-            product_obj = ProductSchema(**product_obj)
-            price_obj = PriceSchema(price=int(product['price']))
-            self.check_data_from_db(product_obj, price_obj)
 
     def check_data_from_db(self, product_obj: ProductSchema, price_obj: PriceSchema):
         self.items_count += 1
@@ -89,11 +95,16 @@ class AlserParser:
             logging.info(f"New Price: {price_obj.price} for product: {product.id}")
             if int(price_obj.discount) <= -15:
                 image_caption = utils.make_image_caption(product_obj, self.prices_crud.get_last_n_prices(product.id))
-                if len(product_obj.images.split(',')) > 1:
-                    send_tg = send_to_tg.send_as_media_group(image_caption, product_obj)
-                else:
-                    send_tg = send_to_tg.send_as_photo(image_caption, product_obj.images)
-                logging.info(f"Send to telegram status code: {send_tg}")
+                try:
+                    if len(product_obj.images.split(',')) > 1:
+                        send_tg = send_to_tg.send_as_media_group(image_caption, product_obj)
+                    else:
+                        send_tg = send_to_tg.send_as_photo(image_caption, product_obj.images)
+                    logging.info(f"Send to telegram status code: {send_tg}")
+                except Exception as e:
+                    logging.exception(f"{config.MARKET} {image_caption}: {e}")
+                    send_to_tg.send_error(f"{config.MARKET} {image_caption}: {e}")
+                    return
 
 
 if __name__ == '__main__':

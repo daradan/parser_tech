@@ -25,8 +25,8 @@ class TechnodomParser:
 
     def start(self):
         logging.info(f"{config.MARKET} Parser Start")
-        try:
-            for catalog in categories.items:
+        for catalog in categories.items:
+            try:
                 url = utils.make_url(catalog)
                 page = 1
                 response = self.get_response(url, page)
@@ -38,9 +38,10 @@ class TechnodomParser:
                     products.extend(self.get_response(url, page)['payload'])
                     total_product -= 24
                 self.parse_products(products)
-        except Exception as e:
-            logging.exception(f"{config.MARKET}: {e}")
-            send_to_tg.send_error(e)
+            except Exception as e:
+                logging.exception(f"{config.MARKET} {catalog}: {e}")
+                send_to_tg.send_error(f"{config.MARKET} {catalog}: {e}")
+                continue
 
     def get_response(self, url: str, page: int) -> json:
         params = config.PARAMS
@@ -54,25 +55,30 @@ class TechnodomParser:
 
     def parse_products(self, products: list):
         for product in products:
-            if not product.get('title') \
-                    or not product.get('uri') \
-                    or not product.get('sku') \
-                    or not product.get('brand') \
-                    or not product.get('categories_ru') \
-                    or not product.get('images'):
+            try:
+                if not product.get('title') \
+                        or not product.get('uri') \
+                        or not product.get('sku') \
+                        or not product.get('brand') \
+                        or not product.get('categories_ru') \
+                        or not product.get('images'):
+                    continue
+                product_obj = {
+                    'name': product['title'],
+                    'url': f"https://www.technodom.kz/p/{product['uri']}",
+                    'sku': product['sku'],
+                    'brand': product['brand'],
+                    'category': product['categories_ru'][0],
+                    'color': product['color']['title'],
+                    'images': utils.make_images(product['images'])
+                }
+                product_obj = ProductSchema(**product_obj)
+                price_obj = PriceSchema(price=int(product['price']))
+                self.check_data_from_db(product_obj, price_obj)
+            except Exception as e:
+                logging.exception(f"{config.MARKET} {product}: {e}")
+                send_to_tg.send_error(f"{config.MARKET}: {e}")
                 continue
-            product_obj = {
-                'name': product['title'],
-                'url': f"https://www.technodom.kz/p/{product['uri']}",
-                'sku': product['sku'],
-                'brand': product['brand'],
-                'category': product['categories_ru'][0],
-                'color': product['color']['title'],
-                'images': utils.make_images(product['images'])
-            }
-            product_obj = ProductSchema(**product_obj)
-            price_obj = PriceSchema(price=int(product['price']))
-            self.check_data_from_db(product_obj, price_obj)
 
     def check_data_from_db(self, product_obj: ProductSchema, price_obj: PriceSchema):
         self.items_count += 1
@@ -88,11 +94,16 @@ class TechnodomParser:
             logging.info(f"New Price: {price_obj.price} for product: {product.id}")
             if int(price_obj.discount) <= -15:
                 image_caption = utils.make_image_caption(product_obj, self.prices_crud.get_last_n_prices(product.id))
-                if len(product_obj.images.split(',')) > 1:
-                    send_tg = send_to_tg.send_as_media_group(image_caption, product_obj)
-                else:
-                    send_tg = send_to_tg.send_as_photo(image_caption, product_obj.images)
-                logging.info(f"Send to telegram status code: {send_tg}")
+                try:
+                    if len(product_obj.images.split(',')) > 1:
+                        send_tg = send_to_tg.send_as_media_group(image_caption, product_obj)
+                    else:
+                        send_tg = send_to_tg.send_as_photo(image_caption, product_obj.images)
+                    logging.info(f"Send to telegram status code: {send_tg}")
+                except Exception as e:
+                    logging.exception(f"{config.MARKET} {image_caption}: {e}")
+                    send_to_tg.send_error(f"{config.MARKET} {image_caption}: {e}")
+                    return
 
 
 if __name__ == '__main__':

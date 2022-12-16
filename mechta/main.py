@@ -25,8 +25,8 @@ class MechtaParser:
 
     def start(self):
         logging.info(f"{config.MARKET} Parser Start")
-        try:
-            for category in categories.get_categories(self.session):
+        for category in categories.get_categories(self.session):
+            try:
                 page = 1
                 response = self.get_response(config.URL, category, page)
                 total_product = response['all_items_count'] - response['page_items_count']
@@ -37,9 +37,10 @@ class MechtaParser:
                     products.extend(self.get_response(config.URL, category, page)['items'])
                     total_product -= response['page_items_count']   # 24
                 self.parse_products(products)
-        except Exception as e:
-            logging.exception(f"{config.MARKET}: {e}")
-            send_to_tg.send_error(e)
+            except Exception as e:
+                logging.exception(f"{config.MARKET} {category}: {e}")
+                send_to_tg.send_error(f"{config.MARKET} {category}: {e}")
+                continue
 
     def get_response(self, url: str, category: str, page: int) -> json:
         params = config.PARAMS
@@ -58,24 +59,29 @@ class MechtaParser:
 
     def parse_products(self, products: list):
         for product in products:
-            if not product.get('title') \
-                    or not product.get('code') \
-                    or not product.get('id') \
-                    or not product['metrics'].get('brand') \
-                    or not product['metrics'].get('category') \
-                    or not product.get('photos'):
+            try:
+                if not product.get('title') \
+                        or not product.get('code') \
+                        or not product.get('id') \
+                        or not product['metrics'].get('brand') \
+                        or not product['metrics'].get('category') \
+                        or not product.get('photos'):
+                    continue
+                product_obj = {
+                    'name': product['title'],
+                    'url': f"https://www.mechta.kz/product/{product['code']}",
+                    'store_id': product['id'],
+                    'brand': product['metrics']['brand'],
+                    'category': product['metrics']['category'],
+                    'images': ','.join(product['photos']),
+                }
+                product_obj = ProductSchema(**product_obj)
+                price_obj = PriceSchema(price=product['prices']['discounted_price'])
+                self.check_data_from_db(product_obj, price_obj)
+            except Exception as e:
+                logging.exception(f"{config.MARKET} {product}: {e}")
+                send_to_tg.send_error(f"{config.MARKET}: {e}")
                 continue
-            product_obj = {
-                'name': product['title'],
-                'url': f"https://www.mechta.kz/product/{product['code']}",
-                'store_id': product['id'],
-                'brand': product['metrics']['brand'],
-                'category': product['metrics']['category'],
-                'images': ','.join(product['photos']),
-            }
-            product_obj = ProductSchema(**product_obj)
-            price_obj = PriceSchema(price=product['prices']['discounted_price'])
-            self.check_data_from_db(product_obj, price_obj)
 
     def check_data_from_db(self, product_obj: ProductSchema, price_obj: PriceSchema):
         self.items_count += 1
@@ -91,11 +97,16 @@ class MechtaParser:
             logging.info(f"New Price: {price_obj.price} for product: {product.id}")
             if int(price_obj.discount) <= -15:
                 image_caption = utils.make_image_caption(product_obj, self.prices_crud.get_last_n_prices(product.id))
-                if len(product_obj.images.split(',')) > 1:
-                    send_tg = send_to_tg.send_as_media_group(image_caption, product_obj)
-                else:
-                    send_tg = send_to_tg.send_as_photo(image_caption, product_obj.images)
-                logging.info(f"Send to telegram status code: {send_tg}")
+                try:
+                    if len(product_obj.images.split(',')) > 1:
+                        send_tg = send_to_tg.send_as_media_group(image_caption, product_obj)
+                    else:
+                        send_tg = send_to_tg.send_as_photo(image_caption, product_obj.images)
+                    logging.info(f"Send to telegram status code: {send_tg}")
+                except Exception as e:
+                    logging.exception(f"{config.MARKET} {image_caption}: {e}")
+                    send_to_tg.send_error(f"{config.MARKET} {image_caption}: {e}")
+                    return
 
 
 if __name__ == '__main__':
