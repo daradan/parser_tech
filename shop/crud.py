@@ -1,7 +1,9 @@
-from typing import Union, List
+from typing import Union
 from sqlalchemy.orm import Session
-from .models import TechnodomProducts, TechnodomPrices
+from .models import ShopProducts, ShopPrices
+# from .database import SessionLocal
 from .schemas import ProductSchema, PriceSchema
+from . import config
 
 import sys
 import os
@@ -57,18 +59,16 @@ class PricesCrud(Crud):
         return self.session.query(self.schema).filter_by(product_id=product_id).order_by(self.schema.created.desc()).\
             first()
 
-    def get_last_n_prices(self, product_id: int) -> List[TechnodomPrices]:
+    def get_last_n_prices(self, product_id: int):
         return self.session.query(self.schema).filter_by(product_id=product_id).order_by(self.schema.created.desc()).\
             limit(global_config.LAST_N_PRICES).all()
 
 
-class TechnodomProductsCrud(ProductsCrud):
+class ShopProductsCrud(ProductsCrud):
     def __init__(self, session: Session):
-        super().__init__(session, TechnodomProducts)
+        super().__init__(session, ShopProducts)
 
 
-class TechnodomPricesCrud(PricesCrud):
+class ShopPricesCrud(PricesCrud):
     def __init__(self, session: Session):
-        super().__init__(session, TechnodomPrices)
-
-
+        super().__init__(session, ShopPrices)

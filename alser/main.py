@@ -13,18 +13,22 @@ parent = os.path.dirname(current)
 sys.path.append(parent)
 from database import SessionLocal
 import send_to_tg
+import global_utils
+import global_config
+from proxies import Proxies
 
 
 class AlserParser:
     def __init__(self):
         self.db_session = SessionLocal()
+        self.session = requests.Session()
         self.products_crud: AlserProductsCrud = AlserProductsCrud(session=self.db_session)
         self.prices_crud: AlserPricesCrud = AlserPricesCrud(session=self.db_session)
-        self.items_count = 0
+        self.proxies = Proxies().start()
 
     def start(self):
-        logging.info(f"{config.MARKET} Parser Start")
-        for category_id, category in categories.get_categories().items():
+        logging.info(f"{config.MARKET} Parser START")
+        for category_id, category in categories.get_categories(self.session, self.proxies):
             try:
                 page = 1
                 response = self.get_response(int(category_id), page)

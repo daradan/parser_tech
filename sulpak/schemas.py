@@ -6,9 +6,9 @@ class ProductSchema(BaseModel):
     name: str
     url: str
     store_id: int
-    brand: str
+    brand: str = ''
     category: str
-    characteristics: str
+    characteristics: str = ''
     images: str
 
 

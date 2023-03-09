@@ -5,10 +5,10 @@ from typing import Optional
 class ProductSchema(BaseModel):
     name: str
     url: str
-    sku: str
-    brand: str = None
+    store_id: str
+    brand: Optional[str] = ''
     category: str
-    color: Optional[str]
+    characteristics: str = ''
     images: str
 
 

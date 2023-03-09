@@ -1,10 +1,13 @@
 import logging
 from logging.handlers import RotatingFileHandler
+from random import shuffle
 
 import technodom
 import mechta
 import sulpak
 import alser
+import shop
+import dns
 
 
 if __name__ == '__main__':
@@ -14,7 +17,14 @@ if __name__ == '__main__':
         level=logging.INFO,
     )
 
-    technodom.TechnodomParser().start()
-    mechta.MechtaParser().start()
-    sulpak.SulpakParser().start()
-    alser.AlserParser().start()
+parsers = [
+    # technodom.TechnodomParser().start,
+    # mechta.MechtaParser().start,
+    # sulpak.SulpakParser().start,
+    # alser.AlserParser().start,
+    shop.ShopParser().start,
+    # dns.DnsParser().start,
+]
+shuffle(parsers)
+for parser in parsers:
+    parser()
