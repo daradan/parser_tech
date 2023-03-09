@@ -18,12 +18,12 @@ if __name__ == '__main__':
     )
 
 parsers = [
-    # technodom.TechnodomParser().start,
-    # mechta.MechtaParser().start,
-    # sulpak.SulpakParser().start,
+    technodom.TechnodomParser().start,
+    mechta.MechtaParser().start,
+    sulpak.SulpakParser().start,
     # alser.AlserParser().start,
     shop.ShopParser().start,
-    # dns.DnsParser().start,
+    dns.DnsParser().start,
 ]
 shuffle(parsers)
 for parser in parsers:
